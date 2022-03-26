@@ -1,0 +1,43 @@
+on: 
+  workflow_dispatch
+name: Azure ARM
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      # Checkout code
+    - uses: actions/checkout@main
+
+      # Log into Azure 
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Generate SSH Keys
+      run: |
+        ssh-keygen -m PEM -t rsa -b 4096 -C "" -f ~/.ssh/test-key -N "" <<< y
+        echo "::set-output name=ssh-public-key::$(cat ~/.ssh/test-key.pub)"
+        echo "::set-output name=ssh-private-key::$(cat ~/.ssh/test-key)"
+        export SSHPrivKey=$(cat ~/.ssh/test-key)
+        echo $SSHPrivKey
+        echo "::set-output name=ssh-key::$(echo $SSHPrivKey)"
+        #echo "GITHUB_SHA_SHORT='$(cat ~/.ssh/test-key)'" >> $GITHUB_ENV
+        #cat ~/.ssh/test-key
+      id: ssh-keys
+      
+    - name: test SSH Keys
+      run: |
+        echo "$SSHPrivKey"
+        echo "========================================================================"
+        echo ${{ steps.ssh-keys.outputs.ssh-key }}
+
+      # Deploy Bicep file
+    - name: deploy
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: "runner-test-git-eus2-001" 
+        template: ./runner.bicep
+        parameters: sshpubkey="${{ steps.ssh-keys.outputs.ssh-public-key }}"
+        failOnStdErr: false
