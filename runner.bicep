@@ -67,7 +67,7 @@ resource vnetname_resource 'Microsoft.Network/virtualNetworks@2019-11-01' = {
   }
 }
 
-resource hostname_nic 'Microsoft.Network/networkInterfaces@2019-11-01' = [for i in range(0 + rgindex, rgindex + count): {
+resource hostname_nic 'Microsoft.Network/networkInterfaces@2019-11-01' = [for i in range(0 + rgindex, rgindex + (count - 1)): {
   name: '${hostname}00${i}-nic'
   location: location
   properties: {
@@ -88,7 +88,7 @@ resource hostname_nic 'Microsoft.Network/networkInterfaces@2019-11-01' = [for i 
   ]
 }]
 
-resource hostname_resource 'Microsoft.Compute/virtualMachines@2019-07-01' =  [for i in range(0 + rgindex, rgindex + count): {
+resource hostname_resource 'Microsoft.Compute/virtualMachines@2019-07-01' =  [for i in range(0 + rgindex, rgindex + (count - 1)): {
   name: '${hostname}00${i}'
   location: location
   properties: {
